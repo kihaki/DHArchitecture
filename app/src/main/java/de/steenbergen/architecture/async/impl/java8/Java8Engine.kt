@@ -1,7 +1,7 @@
 package de.steenbergen.architecture.async.impl.java8
 
 import de.steenbergen.architecture.async.contract.AsyncEngine
-import de.steenbergen.architecture.async.contract.AsyncWork
+import de.steenbergen.architecture.async.contract.AsyncOperationInProgress
 import de.steenbergen.architecture.async.impl.UiThreadExecutor
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executor
@@ -25,8 +25,8 @@ class Java8Engine(
         operation: (I) -> O,
         onError: (Throwable) -> Unit,
         onSuccess: (O) -> Unit
-    ): AsyncWork {
-        return Java8FutureAsyncWork(
+    ): AsyncOperationInProgress {
+        return Java8FutureAsyncOperationInProgress(
             CompletableFuture.supplyAsync(Supplier<O> {
                 operation(input)
             }, workExecutor)
@@ -38,8 +38,10 @@ class Java8Engine(
         )
     }
 
-    class Java8FutureAsyncWork(private val future: CompletableFuture<*>) : AsyncWork {
-        override fun cancel() {
+    class Java8FutureAsyncOperationInProgress(private val future: CompletableFuture<*>) :
+        AsyncOperationInProgress {
+
+        override fun close() {
             future.cancel(true)
         }
     }

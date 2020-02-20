@@ -1,7 +1,7 @@
 package de.steenbergen.architecture.async.impl.kovenant
 
 import de.steenbergen.architecture.async.contract.AsyncEngine
-import de.steenbergen.architecture.async.contract.AsyncWork
+import de.steenbergen.architecture.async.contract.AsyncOperationInProgress
 import de.steenbergen.architecture.async.impl.UiThreadExecutor
 import nl.komponents.kovenant.CancelablePromise
 import nl.komponents.kovenant.Context
@@ -26,8 +26,8 @@ class KovenantEngine(
         operation: (I) -> O,
         onError: (Throwable) -> Unit,
         onSuccess: (O) -> Unit
-    ): AsyncWork {
-        return KovenantAsyncWork(
+    ): AsyncOperationInProgress {
+        return KovenantAsyncOperationInProgress(
             (task(context) {
                 operation(input)
             } success {
@@ -45,8 +45,10 @@ class KovenantEngine(
 
     private class KovenantEngineCancelledException : Exception()
 
-    class KovenantAsyncWork(private val promise: CancelablePromise<*, Exception>) : AsyncWork {
-        override fun cancel() {
+    class KovenantAsyncOperationInProgress(private val promise: CancelablePromise<*, Exception>) :
+        AsyncOperationInProgress {
+
+        override fun close() {
             promise.cancel(KovenantEngineCancelledException())
         }
     }

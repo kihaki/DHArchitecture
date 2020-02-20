@@ -4,20 +4,20 @@ import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewModelScoped
 import de.steenbergen.architecture.async.contract.AsyncEngine
-import de.steenbergen.architecture.async.contract.AsyncWork
-import de.steenbergen.architecture.async.contract.Task
+import de.steenbergen.architecture.async.contract.AsyncOperation
+import de.steenbergen.architecture.async.contract.AsyncOperationInProgress
 import de.steenbergen.architecture.async.contract.plus
 import de.steenbergen.architecture.sample.ui.login.LoginViewState.*
-import de.steenbergen.architecture.sample.ui.login.di.injectCoroutinesEngine
+import de.steenbergen.architecture.sample.ui.login.di.injectAsyncEngine
 import de.steenbergen.architecture.sample.ui.login.di.injectLoginApi
 import de.steenbergen.architecture.sample.ui.login.di.injectSessionRoomDb
 import de.steenbergen.architecture.sample.ui.login.domain.AuthResponse
 import de.steenbergen.architecture.sample.ui.login.domain.Session
 import de.steenbergen.architecture.sample.ui.login.domain.UserLoginPayload
 import de.steenbergen.architecture.sample.ui.login.net.ServerErrorException
-import de.steenbergen.architecture.sample.ui.login.usecase.LoginUseCase
+import de.steenbergen.architecture.sample.ui.login.usecase.LoginOperation
 
 class LoginViewModel : ViewModel() {
 
@@ -26,33 +26,36 @@ class LoginViewModel : ViewModel() {
     private val _viewState: MutableLiveData<LoginViewState> = MutableLiveData(Initial)
     val viewState: LiveData<LoginViewState> = _viewState
 
-    private val ioEngine: AsyncEngine = injectCoroutinesEngine(viewModelScope)
+    private val engine: AsyncEngine = injectAsyncEngine()
 
-    private val storeSessionTask: Task<Session, Unit> = { session: Session ->
-        injectSessionRoomDb().store(session)
-    } + ioEngine
+    private val storeSessionOp: AsyncOperation<Session, Unit> =
+        { session: Session ->
+            injectSessionRoomDb().store(session)
+        } + engine
 
-    private val loginTask: Task<UserLoginPayload, AuthResponse> =
-        LoginUseCase(injectLoginApi()) + ioEngine
+    private val loginOp: AsyncOperation<UserLoginPayload, AuthResponse> =
+        LoginOperation(injectLoginApi()) + engine
 
-    private var loginProcess: AsyncWork? = null
+    private var loginProcess: AsyncOperationInProgress? = null
 
     fun login(userEmail: String, password: String) {
         _viewState.value = LoginStarted
-        loginProcess?.cancel()
-        loginProcess = loginTask.execute(
-            input = UserLoginPayload(
-                userEmail,
-                password
-            ),
-            onSuccess = ::onLoginSuccess,
-            onError = ::onLoginError
+        loginProcess?.close()
+        loginProcess = viewModelScoped(
+            loginOp.execute(
+                input = UserLoginPayload(
+                    userEmail,
+                    password
+                ),
+                onSuccess = ::onLoginSuccess,
+                onError = ::onLoginError
+            )
         )
     }
 
     private fun onLoginSuccess(result: AuthResponse) {
         Log.i("LoginSample", "Login success: $result")
-        storeSessionTask.execute(
+        storeSessionOp.execute(
             input = Session(
                 result.token
             ),
@@ -82,8 +85,9 @@ class LoginViewModel : ViewModel() {
         }
     }
 
-    override fun onCleared() {
-        super.onCleared()
-        loginProcess?.cancel()
-    }
+    // TODO: Test if loginProcess is really automatically closed
+//    override fun onCleared() {
+//        super.onCleared()
+//        loginProcess?.close()
+//    }
 }

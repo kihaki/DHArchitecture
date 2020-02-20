@@ -3,7 +3,7 @@ package de.steenbergen.architecture.async.impl.executor
 import android.os.Handler
 import android.os.Looper
 import de.steenbergen.architecture.async.contract.AsyncEngine
-import de.steenbergen.architecture.async.contract.AsyncWork
+import de.steenbergen.architecture.async.contract.AsyncOperationInProgress
 import de.steenbergen.architecture.async.contract.Callback
 import de.steenbergen.architecture.async.contract.ErrorCallback
 import java.util.concurrent.Executor
@@ -34,7 +34,7 @@ class ExecutorEngine(
         operation: (I) -> O,
         onError: ErrorCallback,
         onSuccess: Callback<O>
-    ): AsyncWork {
+    ): AsyncOperationInProgress {
         return RunnableWorker(input, operation, onError, onSuccess, workExecutor, callbackExecutor)
     }
 
@@ -45,7 +45,7 @@ class ExecutorEngine(
         private val onSuccess: Callback<O>,
         workExecutor: Executor,
         private val callbackExecutor: Executor
-    ) : AsyncWork {
+    ) : AsyncOperationInProgress {
         @Volatile
         private var isCancelled: Boolean = false
 
@@ -64,7 +64,7 @@ class ExecutorEngine(
             }
         }
 
-        override fun cancel() {
+        override fun close() {
             isCancelled = true
         }
     }

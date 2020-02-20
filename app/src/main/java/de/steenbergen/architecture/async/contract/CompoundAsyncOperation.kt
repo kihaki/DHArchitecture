@@ -5,22 +5,22 @@ class CompoundAsyncOperation<in I, out I2, out O>(
     private val second: AsyncOperation<I2, O>
 ) : AsyncOperation<I, O> {
 
-    private var asyncWork = CompoundAsyncWork(null, null)
+    private var asyncWork = CompoundAsyncOperationInProgress(null, null)
 
-    override fun execute(input: I, onError: ErrorCallback, onSuccess: Callback<O>): AsyncWork {
+    override fun execute(input: I, onError: ErrorCallback, onSuccess: Callback<O>): AsyncOperationInProgress {
         asyncWork.first = first.execute(input, onError) { output ->
             asyncWork.second = second.execute(output, onError, onSuccess)
         }
         return asyncWork
     }
 
-    class CompoundAsyncWork(
-        internal var first: AsyncWork?,
-        internal var second: AsyncWork?
-    ) : AsyncWork {
-        override fun cancel() {
-            first?.cancel()
-            second?.cancel()
+    class CompoundAsyncOperationInProgress(
+        internal var first: AsyncOperationInProgress?,
+        internal var second: AsyncOperationInProgress?
+    ) : AsyncOperationInProgress {
+        override fun close() {
+            first?.close()
+            second?.close()
         }
     }
 }

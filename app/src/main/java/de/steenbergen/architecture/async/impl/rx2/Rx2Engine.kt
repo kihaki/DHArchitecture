@@ -1,7 +1,7 @@
 package de.steenbergen.architecture.async.impl.rx2
 
 import de.steenbergen.architecture.async.contract.AsyncEngine
-import de.steenbergen.architecture.async.contract.AsyncWork
+import de.steenbergen.architecture.async.contract.AsyncOperationInProgress
 import io.reactivex.Scheduler
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -18,8 +18,8 @@ class Rx2Engine(
         operation: (I) -> O,
         onError: (Throwable) -> Unit,
         onSuccess: (O) -> Unit
-    ): AsyncWork {
-        return Rx2AsyncWork(
+    ): AsyncOperationInProgress {
+        return Rx2AsyncOperationInProgress(
             Single.create<O> { emitter ->
                 try {
                     val result = operation(input)
@@ -34,8 +34,9 @@ class Rx2Engine(
         )
     }
 
-    class Rx2AsyncWork(private val subscription: Disposable) : AsyncWork {
-        override fun cancel() {
+    class Rx2AsyncOperationInProgress(private val subscription: Disposable) :
+        AsyncOperationInProgress {
+        override fun close() {
             subscription.dispose()
         }
     }

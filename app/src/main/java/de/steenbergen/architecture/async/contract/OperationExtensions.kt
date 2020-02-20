@@ -1,12 +1,17 @@
 package de.steenbergen.architecture.async.contract
 
-inline operator fun <I, O, T> Operation<I, O>.plus(crossinline other: Operation<O, T>): Operation<I, T> =
-    this.then(other)
+inline fun <A, B, C> ((A) -> B).then(crossinline other: ((B) -> C)): ((A) -> C) {
+    return { param: A -> other(this(param)) }
+}
 
-inline fun <I, O, T> Operation<I, O>.then(crossinline other: Operation<O, T>): Operation<I, T> =
-    { input ->
-        other(this(input))
-    }
+inline operator fun <A, B, C> ((A) -> B).plus(crossinline other: ((B) -> C)): ((A) -> C) {
+    return this.then(other)
+}
 
-inline operator fun <O, T> (() -> O).plus(crossinline other: Operation<O, T>): Operation<Unit, T> =
-    { other(this()) }
+inline fun <B, C> (() -> B).then(crossinline other: ((B) -> C)): (() -> C) {
+    return { other(this()) }
+}
+
+inline operator fun <B, C> (() -> B).plus(crossinline other: ((B) -> C)): (() -> C) {
+    return this.then(other)
+}

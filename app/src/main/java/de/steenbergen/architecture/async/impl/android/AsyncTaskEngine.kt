@@ -10,8 +10,8 @@ class AsyncTaskEngine : AsyncEngine {
         operation: (I) -> O,
         onError: ErrorCallback,
         onSuccess: Callback<O>
-    ): AsyncWork {
-        return AsyncTaskWork(WorkerTask(operation, onError, onSuccess).apply { execute(input) })
+    ): AsyncOperationInProgress {
+        return AsyncTaskOperationInProgress(WorkerTask(operation, onError, onSuccess).apply { execute(input) })
     }
 
     private class WorkerTask<I, O>(
@@ -33,8 +33,8 @@ class AsyncTaskEngine : AsyncEngine {
         }
     }
 
-    class AsyncTaskWork(private val task: AsyncTask<*, *, *>) : AsyncWork {
-        override fun cancel() {
+    class AsyncTaskOperationInProgress(private val task: AsyncTask<*, *, *>) : AsyncOperationInProgress {
+        override fun close() {
             task.cancel(true)
         }
     }

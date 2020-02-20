@@ -1,11 +1,11 @@
 package de.steenbergen.architecture.async.impl.coroutines
 
 import de.steenbergen.architecture.async.contract.AsyncEngine
-import de.steenbergen.architecture.async.contract.AsyncWork
+import de.steenbergen.architecture.async.contract.AsyncOperationInProgress
 import kotlinx.coroutines.*
 
 class CoroutinesEngine(
-    private val scope: CoroutineScope,
+    private val scope: CoroutineScope = GlobalScope,
     private val workDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val callbackDispatcher: CoroutineDispatcher = Dispatchers.Main
 ) : AsyncEngine {
@@ -15,8 +15,8 @@ class CoroutinesEngine(
         operation: (I) -> O,
         onError: (Throwable) -> Unit,
         onSuccess: (O) -> Unit
-    ): AsyncWork {
-        return CoroutinesAsyncWork(
+    ): AsyncOperationInProgress {
+        return CoroutinesAsyncOperationInProgress(
             (scope + workDispatcher).launch {
                 try {
                     val output = operation(input)
@@ -36,8 +36,8 @@ class CoroutinesEngine(
         )
     }
 
-    class CoroutinesAsyncWork(private val job: Job) : AsyncWork {
-        override fun cancel() {
+    class CoroutinesAsyncOperationInProgress(private val job: Job) : AsyncOperationInProgress {
+        override fun close() {
             job.cancel()
         }
     }

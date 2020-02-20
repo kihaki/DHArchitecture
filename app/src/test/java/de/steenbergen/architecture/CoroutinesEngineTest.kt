@@ -122,7 +122,7 @@ class CoroutinesEngineTest {
 
         Assert.assertEquals(null, successValue)
         Assert.assertEquals(null, thrownError)
-        work.cancel()
+        work.close()
 
         workDispatcher.resumeDispatcher()
 
@@ -156,7 +156,7 @@ class CoroutinesEngineTest {
         Assert.assertEquals(null, successValue)
         Assert.assertEquals(null, thrownError)
         Thread.sleep(20)
-        work.cancel()
+        work.close()
 
         Thread.sleep(100)
 

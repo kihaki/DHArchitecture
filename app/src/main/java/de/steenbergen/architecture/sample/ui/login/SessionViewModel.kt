@@ -4,10 +4,9 @@ import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import de.steenbergen.architecture.async.contract.plus
 import de.steenbergen.architecture.sample.ui.login.SessionViewState.LoadingSession
-import de.steenbergen.architecture.sample.ui.login.di.injectCoroutinesEngine
+import de.steenbergen.architecture.sample.ui.login.di.injectAsyncEngine
 import de.steenbergen.architecture.sample.ui.login.di.injectSessionObserver
 import de.steenbergen.architecture.sample.ui.login.di.injectSessionRoomDb
 import de.steenbergen.architecture.storage.contract.Try
@@ -16,8 +15,8 @@ class SessionViewModel : ViewModel() {
 
     var closeView: (() -> Unit)? = null
 
-    private val ioEngine = injectCoroutinesEngine(viewModelScope)
-    private val logoutTask = { injectSessionRoomDb().nuke() } + ioEngine
+    private val ioEngine = injectAsyncEngine()
+    private val logoutProcess = { injectSessionRoomDb().nuke() } + ioEngine
 
     private val sessionObserver = injectSessionObserver { result ->
         when (result) {
@@ -43,7 +42,7 @@ class SessionViewModel : ViewModel() {
     val viewState: LiveData<SessionViewState> = _viewState
 
     fun logout() {
-        logoutTask.execute(
+        logoutProcess.execute(
             input = Unit,
             onError = { closeView() },
             onSuccess = { closeView() }
@@ -52,6 +51,11 @@ class SessionViewModel : ViewModel() {
 
     private fun closeView() {
         closeView?.invoke()
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        sessionObserver.stop()
     }
 }
 

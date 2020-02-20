@@ -4,7 +4,9 @@ import de.steenbergen.architecture.App
 import de.steenbergen.architecture.async.contract.AsyncEngine
 import de.steenbergen.architecture.async.contract.Callback
 import de.steenbergen.architecture.async.contract.Operation
+import de.steenbergen.architecture.async.impl.android.AsyncTaskEngine
 import de.steenbergen.architecture.async.impl.coroutines.CoroutinesEngine
+import de.steenbergen.architecture.async.impl.executor.ExecutorEngine
 import de.steenbergen.architecture.sample.ui.login.domain.Session
 import de.steenbergen.architecture.sample.ui.login.db.SessionDao
 import de.steenbergen.architecture.sample.ui.login.net.LoginApi
@@ -34,8 +36,8 @@ fun injectLoginApi(): LoginApi {
         .create(LoginApi::class.java)
 }
 
-fun injectCoroutinesEngine(scope: CoroutineScope): AsyncEngine {
-    return CoroutinesEngine(scope)
+fun injectAsyncEngine(): AsyncEngine {
+    return AsyncTaskEngine()
 }
 
 fun <I> injectArtificialWait(sleepTimeMillis: Long): Operation<I, I> = { passThroughData ->
