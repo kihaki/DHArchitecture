@@ -78,7 +78,7 @@ class LoginFragment : Fragment(R.layout.login_fragment) {
                     loginView_userEmailInput.error = null
                     loginView_passwordInput.error = null
                 }
-                is Error -> {
+                is LoginError -> {
                     loginView_loginProgress.visibility = View.GONE
 
                     loginView_userEmailInput.isEnabled = true
