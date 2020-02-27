@@ -19,7 +19,7 @@ import de.steenbergen.architecture.sample.ui.login.domain.UserLoginPayload
 import de.steenbergen.architecture.sample.ui.login.net.ServerErrorException
 import de.steenbergen.architecture.sample.ui.login.usecase.LoginOperation
 
-class LoginViewModelLiveData : ViewModel() {
+class LoginViewModelEngine : ViewModel() {
 
     var goToSession: (() -> Unit)? = null
 

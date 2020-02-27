@@ -13,7 +13,7 @@ internal typealias Block<T> = suspend AsyncScope<T>.() -> Unit
 const val DEFAULT_TIMEOUT = 5000L
 
 internal class CoroutineLiveData<T>(
-    context: CoroutineContext = EmptyCoroutineContext,
+    context: CoroutineContext = Dispatchers.IO,
     timeoutInMs: Long = DEFAULT_TIMEOUT,
     block: Block<T>
 ) : MediatorLiveData<T>() {

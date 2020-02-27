@@ -1,6 +1,7 @@
 package de.steenbergen.architecture.livedata
 
 import androidx.lifecycle.LiveData
+import kotlinx.coroutines.Dispatchers
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.experimental.ExperimentalTypeInference
@@ -18,5 +19,5 @@ import kotlin.experimental.ExperimentalTypeInference
 fun <T> liveData(
     timeoutInMs: Long = DEFAULT_TIMEOUT,
     @BuilderInference block: suspend AsyncScope<T>.() -> Unit
-): LiveData<T> = CoroutineLiveData(EmptyCoroutineContext, timeoutInMs, block)
+): LiveData<T> = CoroutineLiveData(Dispatchers.IO, timeoutInMs, block)
 

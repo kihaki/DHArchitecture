@@ -5,7 +5,7 @@ import kotlinx.coroutines.withContext
 import kotlin.coroutines.CoroutineContext
 
 internal class AsyncScopeImpl<T>(
-    internal var target: CoroutineLiveData<T>,
+    private var target: CoroutineLiveData<T>,
     context: CoroutineContext
 ) : AsyncScope<T> {
 

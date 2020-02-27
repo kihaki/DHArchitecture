@@ -19,7 +19,3 @@ data class ErrorResult(val exception: Throwable?) : Result<Nothing>()
 
 object Loading : Result<Nothing>()
 
-fun throwError(message: () -> String) {
-    throw RuntimeException(message())
-}
-

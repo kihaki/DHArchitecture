@@ -15,28 +15,38 @@ class LoginViewModel : ViewModel() {
     private val loginOperation = LoginOperation(injectLoginApi())
 
     val viewState: LiveData<LoginViewState>
-    private val loginPayload = MutableLiveData<UserLoginPayload>()
+    private val loginPayload = MutableLiveData<UserLoginPayload>(null)
 
     init {
         viewState = loginPayload.switchMap {
             if (it != null) {
-                // this operation will clear itself when liveData observers are removed
-                liveData {
-                    emit(LoginStarted)
-                    // we can take try catch out into another extension
-                    try {
-                        val response = loginOperation(it)
-                        //should not do this in ViewModel
-                        injectSessionRoomDb().store(Session(response.token))
-                        emit(LoginSuccess)
-                        goToSession?.invoke()
-                    } catch (e: Exception) {
-                        emit(LoginError(e.localizedMessage ?: ""))
-                    }
-                }
+                loginLiveData(it)
             } else {
                 MutableLiveData<LoginViewState>(Initial)
             }
+        }
+    }
+
+    /**
+     * This login operation uses [liveData] extension to perform long running tasks.
+     * this operation will be cleared automatically when the LiveData observers are removed
+     *
+     *  - the database operation should be moved to a repository and should be accessed via a use case
+     *  - we can extract try catch into another extension if we want to provide success and error callbacks separately
+     * */
+    private fun loginLiveData(userLoginPayload: UserLoginPayload): LiveData<LoginViewState> {
+        return liveData {
+            emit(LoginStarted)
+            try {
+                val response = loginOperation(userLoginPayload)
+                // will not run if loginOperation resulted in error
+                injectSessionRoomDb().store(Session(response.token))
+                emit(LoginSuccess)
+                goToSession?.invoke()
+            } catch (e: Throwable) {
+                emit(LoginError(e.localizedMessage))
+            }
+            emit(Initial)
         }
     }
 
